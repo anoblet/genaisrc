@@ -2,3 +2,8 @@
 .genaiscript
 .vscode
 node_modules
+
+# Ignore build output
+packages/**/.gitignore
+packages/**/genaiscript.d.ts
+packages/**/tsconfig.json

@@ -11,44 +11,53 @@ const parseBoolean = (value) => {
   throw new Error(`Invalid value: ${value}`)
 }
 
+const parameters = {
+  chunkSize: {
+    type: "number",
+    default: 10000,
+    description: "Maximum number of tokens per chunk",
+  },
+  maxChunks: {
+    type: "number",
+    default: 4,
+    description:
+      "Safeguard against huge commits. Askes confirmation to the user before running more than maxChunks chunks",
+  },
+  gitmoji: {
+    type: "boolean",
+    default: true,
+    description: "Use gitmoji in the commit message",
+  },
+  auto: {
+    type: "boolean",
+    default: false,
+    description: "Automatically stage all files, commit with generated message, and push changes",
+  },
+}
+
 script({
-  title: "git commit message",
+  model: "github_copilot_chat:gpt-4o",
+  title: "Generate Commit Message",
   description: "Generate a commit message for all staged changes",
   unlisted: true,
-  parameters: {
-    chunkSize: {
-      type: "number",
-      default: 10000,
-      description: "Maximum number of tokens per chunk",
-    },
-    maxChunks: {
-      type: "number",
-      default: 4,
-      description:
-        "Safeguard against huge commits. Askes confirmation to the user before running more than maxChunks chunks",
-    },
-    gitmoji: {
-      type: "boolean",
-      default: true,
-      description: "Use gitmoji in the commit message",
-    },
-    auto: {
-      type: "boolean",
-      default: false,
-      description: "Automatically stage all files, commit with generated message, and push changes",
-    },
-  },
 })
 
-const { chunkSize, maxChunks } = env.vars
+// Check for environment variables and set default values
+const chunkSize = isDefined(process.env.GENAISCRIPT_GCM_CHUNK_SIZE)
+  ? parseInt(process.env.GENAISCRIPT_GCM_CHUNK_SIZE)
+  : env.vars.chunkSize ? env.vars.chunkSize : parameters.chunkSize.default
+
+const maxChunks = isDefined(process.env.GENAISCRIPT_GCM_MAX_CHUNKS)
+  ? parseInt(process.env.GENAISCRIPT_GCM_MAX_CHUNKS)
+  : env.vars.maxChunks ? env.vars.maxChunks : parameters.maxChunks.default
 
 const gitmoji = isDefined(process.env.GENAISCRIPT_GCM_GITMOJI)
   ? parseBoolean(process.env.GENAISCRIPT_GCM_GITMOJI)
-  : env.vars.gitmoji
+  : env.vars.gitmoji ? env.vars.gitmoji : parameters.gitmoji.default
 
 const auto = isDefined(process.env.GENAISCRIPT_GCM_AUTO)
   ? parseBoolean(process.env.GENAISCRIPT_GCM_AUTO)
-  : env.vars.auto || false
+  : env.vars.auto ? env.vars.auto : parameters.auto.default
 
 // Check if there are any staged changes
 const stagedChanges = await git.exec(["diff", "--cached", "--name-only"])

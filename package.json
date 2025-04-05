@@ -12,5 +12,9 @@
   "description": "",
   "devDependencies": {
     "genaiscript": "^1.123.0"
-  }
+  },
+  "workspaces": [
+    "packages/gcm",
+    "packages/cmt"
+  ]
 }
