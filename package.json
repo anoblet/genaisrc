@@ -15,6 +15,7 @@
   },
   "workspaces": [
     "packages/gcm",
-    "packages/cmt"
+    "packages/cmt",
+    "packages/llms"
   ]
 }
