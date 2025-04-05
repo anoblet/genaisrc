@@ -2,7 +2,7 @@ import { fileTree } from "genaiscript/runtime"
 
 script({
     description: "Generate a llms.txt file for a project",
-    model: "long",
+    model: "github_copilot_chat:gpt-4o",
     responseType: "markdown",
     tools: "fs_read_file",
 })
