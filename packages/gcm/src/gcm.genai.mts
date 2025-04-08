@@ -75,6 +75,7 @@ if (auto && !hasStaged) {
 const diff = await git.diff({
   staged: true,
   askStageOnEmpty: !auto, // Don't ask if in auto mode
+  excludedPaths: ["package-lock.json", "**/package-lock.json"]
 })
 
 // If no staged changes are found, cancel the script with a message
