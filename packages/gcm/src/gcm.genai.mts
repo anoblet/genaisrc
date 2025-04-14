@@ -33,6 +33,11 @@ const parameters = {
     default: false,
     description: "Automatically stage all files, commit with generated message, and push changes",
   },
+  excludeFromAnalysis: {
+    type: "array",
+    default: ["package-lock.json", "**/package-lock.json"],
+    description: "Files to exclude from analysis when generating commit message but still include in the commit",
+  },
 }
 
 script({
@@ -59,6 +64,10 @@ const auto = isDefined(process.env.GENAISCRIPT_GCM_AUTO)
   ? parseBoolean(process.env.GENAISCRIPT_GCM_AUTO)
   : env.vars.auto ? env.vars.auto : parameters.auto.default
 
+const excludeFromAnalysis = isDefined(process.env.GENAISCRIPT_GCM_EXCLUDE_FROM_ANALYSIS)
+  ? process.env.GENAISCRIPT_GCM_EXCLUDE_FROM_ANALYSIS.split(',')
+  : env.vars.excludeFromAnalysis ? env.vars.excludeFromAnalysis : parameters.excludeFromAnalysis.default
+
 // Check if there are any staged changes
 const stagedChanges = await git.exec(["diff", "--cached", "--name-only"])
 const hasStaged = stagedChanges && stagedChanges.trim().length > 0
@@ -75,7 +84,7 @@ if (auto && !hasStaged) {
 const diff = await git.diff({
   staged: true,
   askStageOnEmpty: !auto, // Don't ask if in auto mode
-  excludedPaths: ["package-lock.json", "**/package-lock.json"]
+  excludedPaths: excludeFromAnalysis
 })
 
 // If no staged changes are found, cancel the script with a message
