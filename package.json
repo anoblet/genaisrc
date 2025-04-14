@@ -17,6 +17,7 @@
     "packages/gcm",
     "packages/cmt",
     "packages/llms",
-    "packages/doc"
+    "packages/doc",
+    "packages/commit"
   ]
 }
