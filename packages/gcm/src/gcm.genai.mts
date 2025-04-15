@@ -44,7 +44,6 @@ script({
   model: "github_copilot_chat:gpt-4o",
   title: "Generate Commit Message",
   description: "Generate a commit message for all staged changes",
-  unlisted: true,
 })
 
 // Check for environment variables and set default values
