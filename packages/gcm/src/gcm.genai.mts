@@ -44,7 +44,7 @@ const parameters = {
 
 export const message = async () => {
   script({
-    model: "github_copilot_chat:gpt-4o",
+    model: "github_copilot_chat:gpt-4.1",
     title: "Generate Commit Message",
     description: "Generate a commit message for all staged changes",
     });
@@ -169,7 +169,7 @@ export const message = async () => {
           addInstructions(_);
         },
         {
-          model: "large", // Specifies the LLM model to use for message generation
+          model: "github_copilot_chat:gpt-4.1", // Specifies the LLM model to use for message generation
           label: "generate commit message", // Label for the prompt task
           system: ["system.assistant"],
           systemSafety: true,
@@ -189,7 +189,7 @@ export const message = async () => {
           _.def("COMMIT_MESSAGES", message);
         },
         {
-          model: "large",
+          model: "github_copilot_chat:gpt-4.1",
           label: "summarize chunk commit messages",
           system: ["system.assistant"],
           systemSafety: true,

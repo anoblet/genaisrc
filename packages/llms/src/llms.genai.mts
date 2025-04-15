@@ -1,8 +1,9 @@
 import { fileTree } from "genaiscript/runtime"
 
 script({
-    description: "Generate a llms.txt file for a project",
-    model: "github_copilot_chat:gpt-4o",
+    title: "LLM Test",
+    description: "Test LLM performance",
+    model: "github_copilot_chat:gpt-4.1",
     responseType: "markdown",
     tools: "fs_read_file",
 })

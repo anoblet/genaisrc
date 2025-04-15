@@ -1,5 +1,5 @@
 script({
-    model: "github_copilot_chat:gpt-4o",
+    model: "github_copilot_chat:gpt-4.1",
     title: "Source Code Comment Generator",
     description: `Add comments to source code to make it more understandable for AI systems or human developers.`,
     parameters: {
