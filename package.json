@@ -11,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "genaiscript": "^1.129.4"
+    "genaiscript": "^1.130.1"
   },
   "workspaces": [
     "packages/gcm",
