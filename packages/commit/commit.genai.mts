@@ -7,8 +7,7 @@ script({
 });
 
 export const commit = async () => {
-  // Run the message function to generate the commit message
-  const commitMessage = await message();
+  await message();
 }
 
 export default commit;
