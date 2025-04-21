@@ -35,7 +35,8 @@ export const comment = async () => {
   }
 
   if (!files.length) {
-    cancel("No files found to comment");
+    console.log("No files found to comment");
+    return; // Fail gracefully by returning instead of canceling
   }
 
   // Filter to only process code files
@@ -45,7 +46,8 @@ export const comment = async () => {
   );
 
   if (!files.length) {
-    cancel("No suitable code files found to comment");
+    console.log("No suitable code files found to comment");
+    return; // Fail gracefully by returning instead of canceling
   }
 
   console.log(`Found ${files.length} code files to comment`);
