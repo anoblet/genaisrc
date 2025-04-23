@@ -2,7 +2,8 @@
  * Script to add comments to files using AI.
  * It uses files from env.files or finds files to comment from git staged files.
  * If no files are staged, it will stage all files, comment them, and unstage them.
- * Uses GENAISCRIPT_COMMENT_EXTENSIONS environment variable to filter files by extension.
+ * Uses GENAISCRIPT_COMMENT_EXTENSIONS environment variable to filter files by extension
+ * only when using git staged files.
  */
 
 script({
@@ -20,13 +21,6 @@ export const comment = async () => {
   const allowedExtensionsStr = process.env.GENAISCRIPT_COMMENT_EXTENSIONS || "";
   const allowedExtensions = allowedExtensionsStr ? allowedExtensionsStr.split(',').map(ext => ext.trim().toLowerCase()) : [];
   
-  if (allowedExtensions.length === 0) {
-    console.log("No file extensions specified in GENAISCRIPT_COMMENT_EXTENSIONS. Please set this environment variable.");
-    return;
-  }
-  
-  console.log(`Using allowed file extensions: ${allowedExtensions.join(', ')}`);
-
   // First, check if files were provided directly
   if (env.files && env.files.length > 0) {
     console.log("Using files provided in env.files");
@@ -34,6 +28,15 @@ export const comment = async () => {
   } else {
     // If no files provided, check git staged files
     console.log("No files provided, checking git staged files");
+    
+    // Make sure we have allowed extensions defined when using git
+    if (allowedExtensions.length === 0) {
+      console.log("No file extensions specified in GENAISCRIPT_COMMENT_EXTENSIONS. Please set this environment variable.");
+      return;
+    }
+    
+    console.log(`Using allowed file extensions: ${allowedExtensions.join(', ')}`);
+    
     try {
       const stagedChangesOutput = await git.exec(["diff", "--cached", "--name-only"]);
       
@@ -59,21 +62,21 @@ export const comment = async () => {
           return;
         }
       }
+      
+      // Filter git-provided files by extension
+      const filteredFiles = filesToComment.filter(file => {
+        const filePath = typeof file === 'string' ? file : file.filename;
+        const fileExt = filePath.split('.').pop()?.toLowerCase() || '';
+        return allowedExtensions.includes(fileExt);
+      });
+      
+      console.log(`Filtered ${filesToComment.length} files to ${filteredFiles.length} files with allowed extensions`);
+      filesToComment = filteredFiles;
     } catch (error) {
       console.log("Error accessing git repository:", error);
       return;
     }
   }
-
-  // Filter files by extension
-  const filteredFiles = filesToComment.filter(file => {
-    const filePath = typeof file === 'string' ? file : file.filename;
-    const fileExt = filePath.split('.').pop()?.toLowerCase() || '';
-    return allowedExtensions.includes(fileExt);
-  });
-  
-  console.log(`Filtered ${filesToComment.length} files to ${filteredFiles.length} files with allowed extensions`);
-  filesToComment = filteredFiles;
 
   // Fail gracefully if no files to comment
   if (!filesToComment || filesToComment.length === 0) {
