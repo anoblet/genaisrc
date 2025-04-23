@@ -18,6 +18,7 @@
     "packages/llms",
     "packages/doc",
     "packages/commit",
-    "packages/comment"
+    "packages/comment",
+    "packages/comment-ast"
   ]
 }
