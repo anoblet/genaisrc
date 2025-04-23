@@ -1,204 +1,178 @@
+/**
+ * Script to add comments to files using AI.
+ * It uses files from env.files or finds files to comment from git staged files.
+ * If no files are staged, it will stage all files, comment them, and unstage them.
+ * Uses GENAISCRIPT_COMMENT_EXTENSIONS environment variable to filter files by extension.
+ */
+
 script({
-  title: "Source Code Commenter",
-  description: "Adds comments to code files using AST-based transformation",
-  system: ["system.assistant", "system.safety_jailbreak", "system.safety_harmful_content"],
+  title: "Comment",
+  description: "Add AI-generated comments to your code files",
 });
 
-// Using console.log for debugging instead of the incorrect debug import
-const dbg = console.debug;
-
-/**
- * Automatically adds comments to code files using AST-based transformation.
- * This function handles both selected files and git staged/modified files.
- */
 export const comment = async () => {
-  // Get files from environment or git if none provided
-  let files = env.files;
-  let useStaged = false;
-  let filesWereStaged = false;
+  let filesToComment: (string | WorkspaceFile)[] = [];
+  let stagedFiles: string[] = [];
+  let filesThatWereStaged: string[] = [];
+  let filesWeStaged: string[] = [];
+  
+  // Get allowed extensions from environment variable
+  const allowedExtensionsStr = process.env.GENAISCRIPT_COMMENT_EXTENSIONS || "";
+  const allowedExtensions = allowedExtensionsStr ? allowedExtensionsStr.split(',').map(ext => ext.trim().toLowerCase()) : [];
+  
+  if (allowedExtensions.length === 0) {
+    console.log("No file extensions specified in GENAISCRIPT_COMMENT_EXTENSIONS. Please set this environment variable.");
+    return;
+  }
+  
+  console.log(`Using allowed file extensions: ${allowedExtensions.join(', ')}`);
 
-  if (!files.length) {
-    // Check if there are staged changes
-    const stagedFiles = await git.listFiles("staged", { askStageOnEmpty: false });
-    
-    if (stagedFiles.length > 0) {
-      // Use staged files
-      files = stagedFiles;
-      useStaged = true;
-      filesWereStaged = true;
-      console.log("Using staged files for commenting");
-    } else {
-      // Use unstaged/modified files
-      files = await git.listFiles("modified");
-      console.log("Using unstaged/modified files for commenting");
+  // First, check if files were provided directly
+  if (env.files && env.files.length > 0) {
+    console.log("Using files provided in env.files");
+    filesToComment = env.files;
+  } else {
+    // If no files provided, check git staged files
+    console.log("No files provided, checking git staged files");
+    try {
+      const stagedChangesOutput = await git.exec(["diff", "--cached", "--name-only"]);
+      
+      if (stagedChangesOutput && stagedChangesOutput.trim().length > 0) {
+        stagedFiles = stagedChangesOutput.trim().split("\n");
+        console.log(`Found ${stagedFiles.length} staged files`);
+        filesToComment = stagedFiles;
+        filesThatWereStaged = [...stagedFiles];
+      } else {
+        // No staged files, stage all files
+        console.log("No staged files found, staging all files");
+        await git.exec(["add", "-A"]);
+        
+        // Get the newly staged files
+        const allStagedOutput = await git.exec(["diff", "--cached", "--name-only"]);
+        if (allStagedOutput && allStagedOutput.trim().length > 0) {
+          stagedFiles = allStagedOutput.trim().split("\n");
+          filesWeStaged = [...stagedFiles];
+          filesToComment = stagedFiles;
+          console.log(`Staged ${stagedFiles.length} files`);
+        } else {
+          console.log("No files to stage, exiting");
+          return;
+        }
+      }
+    } catch (error) {
+      console.log("Error accessing git repository:", error);
+      return;
     }
   }
 
-  if (!files.length) {
-    console.log("No files found to comment");
-    return; // Fail gracefully by returning instead of canceling
+  // Filter files by extension
+  const filteredFiles = filesToComment.filter(file => {
+    const filePath = typeof file === 'string' ? file : file.filename;
+    const fileExt = filePath.split('.').pop()?.toLowerCase() || '';
+    return allowedExtensions.includes(fileExt);
+  });
+  
+  console.log(`Filtered ${filesToComment.length} files to ${filteredFiles.length} files with allowed extensions`);
+  filesToComment = filteredFiles;
+
+  // Fail gracefully if no files to comment
+  if (!filesToComment || filesToComment.length === 0) {
+    console.log("No files to comment, exiting");
+    return;
   }
 
-  // Filter to only process code files
-  const codeExtensions = [".js", ".ts", ".mts", ".jsx", ".tsx", ".mjs", ".py", ".java", ".c", ".cpp", ".cs", ".go", ".rb", ".php", ".yaml", ".yml"];
-  files = files.filter(({ filename }) => 
-    codeExtensions.some(ext => filename.toLowerCase().endsWith(ext))
-  );
-
-  if (!files.length) {
-    console.log("No suitable code files found to comment");
-    return; // Fail gracefully by returning instead of canceling
-  }
-
-  console.log(`Found ${files.length} code files to comment`);
-
-  // Load ast-grep for AST-based transformation
-  const sg = await host.astGrep();
-  const changedFiles = [];
-
-  // Process each file
-  for (const file of files) {
-    console.log(`Processing ${file.filename}`);
-    
-    // Determine language based on file extension
-    let lang = "javascript"; // default
-    const ext = file.filename.split('.').pop()?.toLowerCase();
-    
-    if (ext === "ts" || ext === "mts" || ext === "tsx") lang = "typescript";
-    else if (ext === "py") lang = "python";
-    else if (ext === "java") lang = "java";
-    else if (ext === "c" || ext === "cpp") lang = "cpp";
-    else if (ext === "cs") lang = "c_sharp";
-    else if (ext === "go") lang = "go";
-    else if (ext === "rb") lang = "ruby";
-    else if (ext === "php") lang = "php";
-    else if (ext === "yaml" || ext === "yml") lang = "yaml";
-    
-    // Create a changeset for this file
-    const edits = sg.changeset();
-    let hasChanges = false;
-    
+  // Process each file individually
+  for (const file of filesToComment) {
     try {
-      // Find uncommented functions, classes, and other important code structures
-      const { matches } = await sg.search(
-        lang,
-        file.filename,
-        {
-          rule: {
-            any: [
-              // Functions without preceding comments
-              {
-                kind: "function_declaration",
-                not: {
-                  precedes: {
-                    kind: "comment",
-                    stopBy: "neighbor",
-                  }
-                }
-              },
-              // Classes without preceding comments
-              {
-                kind: "class_declaration",
-                not: {
-                  precedes: {
-                    kind: "comment",
-                    stopBy: "neighbor",
-                  }
-                }
-              },
-              // For Python and other languages: methods without preceding comments
-              {
-                kind: "method_definition",
-                not: {
-                  precedes: {
-                    kind: "comment",
-                    stopBy: "neighbor",
-                  }
-                }
-              }
-            ]
-          }
-        }
-      );
+      const filePath = typeof file === 'string' ? file : file.filename;
+      console.log(`Processing file: ${filePath}`);
+      
+      // Read the file
+      const fileObj = await workspace.readText(filePath);
+      
+      if (!fileObj || !fileObj.content) {
+        console.log(`Skipping empty file: ${filePath}`);
+        continue;
+      }
 
-      if (matches.length === 0) {
-        console.log(`No uncommented code structures found in ${file.filename}`);
+      // Generate comments for the file
+      const result = await addCommentsToFile(filePath, fileObj.content);
+      
+      // Only write the file back if there was no error
+      if (result.error) {
+        console.log(`Error processing ${filePath}: ${result.error}`);
+        console.log("Skipping file modification due to error");
         continue;
       }
       
-      dbg(`Found ${matches.length} uncommented structures in ${file.filename}`);
+      // Write the commented file back
+      await workspace.writeText(filePath, result.content);
       
-      // Process each match to add comments
-      for (const match of matches) {
-        // Get the original code
-        const originalCode = match.text();
-        
-        // Generate a comment for this code structure
-        const res = await runPrompt(
-          (ctx) => {
-            ctx.def("CODE", originalCode);
-            ctx.$`Generate a concise, professional, and informative comment for the following code. 
-            The comment should describe what the code does, parameters, and return values if applicable.
-            If it's a class, describe its purpose.
-            Format the comment in the appropriate style for the language (e.g., JSDoc for JavaScript/TypeScript, 
-            docstrings for Python, etc.).
-            Only return the comment, don't include the code itself.`;
-          },
-          { 
-            label: `Generating comment for ${match.getRoot().filename()}`, 
-            cache: "code-comment",
-            system: ["system.technical"] 
-          }
-        );
-        
-        if (res.error) {
-          console.error(`Error generating comment: ${res.error.message}`);
-          continue;
-        }
-        
-        // Extract the generated comment
-        const commentText = parsers.unfence(res.text, "*") || res.text;
-        
-        // Create the final code with comment
-        const commentedCode = `${commentText}\n${originalCode}`;
-        
-        // Apply the edit
-        edits.replace(match, commentedCode);
-        hasChanges = true;
-      }
-      
-      // If we have changes, commit them
-      if (hasChanges) {
-        const modifiedFiles = edits.commit();
-        
-        if (modifiedFiles.length > 0) {
-          // Write the changes to disk
-          await workspace.writeFiles(modifiedFiles);
-          changedFiles.push(file.filename);
-          console.log(`Added comments to ${file.filename}`);
-        }
-      }
-      
-      // If the files were originally staged, stage them again
-      if (useStaged && hasChanges) {
-        await git.exec(["add", file.filename]);
-        console.log(`Re-staged ${file.filename}`);
+      // If the file was staged before, stage it again
+      if (filesThatWereStaged.includes(filePath)) {
+        console.log(`Re-staging modified file: ${filePath}`);
+        await git.exec(["add", filePath]);
       }
     } catch (error) {
-      console.error(`Error processing ${file.filename}:`, error);
+      console.log(`Error processing file ${typeof file === 'string' ? file : file.filename}:`, error);
     }
   }
 
-  // Summary
-  if (changedFiles.length > 0) {
-    console.log(`\nSuccessfully added comments to ${changedFiles.length} files:`);
-    for (const file of changedFiles) {
-      console.log(` - ${file}`);
-    }
-  } else {
-    console.log("\nNo files were modified.");
+  // Unstage files that weren't staged before
+  if (filesWeStaged.length > 0) {
+    console.log("Unstaging files that weren't staged before");
+    await git.exec(["restore", "--staged", "."]);
   }
 };
 
-// Default export of the comment function
+/**
+ * Add comments to a file using AI.
+ * Returns an object containing the commented content or an error if one occurred.
+ */
+async function addCommentsToFile(file: string, fileContent: string): Promise<{ content: string; error?: string }> {
+  console.log(`Generating comments for ${file}`);
+  
+  // Determine file extension
+  const fileExt = file.split('.').pop()?.toLowerCase();
+  
+  try {
+    // Run the prompt to generate comments
+    const result = await runPrompt(
+      (_) => {
+        _.def("FILE_CONTENT", fileContent, {
+          maxTokens: 10000,
+          language: fileExt,
+        });
+        
+        _.$`Add helpful and descriptive comments to the FILE_CONTENT. 
+        Focus on complex logic, non-obvious functionality, and important sections.
+        Use the appropriate comment syntax for the file type.
+        Return the entire file with comments added.
+        Preserve all existing code and comments.
+        Don't change any functionality.`;
+      },
+      {
+        model: "github_copilot_chat:gpt-4.1",
+        label: "generate code comments",
+        system: ["system.assistant"],
+        systemSafety: true,
+        responseType: "text",
+      }
+    );
+    
+    if (result.error) {
+      return { content: fileContent, error: result.error.toString() };
+    }
+    
+    if (!result.text) {
+      return { content: fileContent, error: "No output returned from LLM" };
+    }
+    
+    return { content: result.text };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { content: fileContent, error: errorMessage };
+  }
+}
+
 export default comment;
