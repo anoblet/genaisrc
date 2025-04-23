@@ -3,7 +3,6 @@ import { message } from "../gcm/src/gcm.genai.mts";
 
 // Script metadata for the Commit module
 script({
-  model: "github_copilot_chat:gpt-4.1",
   title: "Commit",
   description: "Commit",
 });
