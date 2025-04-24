@@ -14,8 +14,6 @@
     "genaiscript": "^1.130.1"
   },
   "workspaces": [
-    "packages/llms",
-    "packages/doc",
     "packages/commit",
     "packages/comment",
     "packages/message"
