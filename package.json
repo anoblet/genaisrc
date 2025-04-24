@@ -14,10 +14,10 @@
     "genaiscript": "^1.130.1"
   },
   "workspaces": [
-    "packages/gcm",
     "packages/llms",
     "packages/doc",
     "packages/commit",
-    "packages/comment"
+    "packages/comment",
+    "packages/message"
   ]
 }

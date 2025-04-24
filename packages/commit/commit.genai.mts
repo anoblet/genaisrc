@@ -1,8 +1,9 @@
 import { comment } from "../comment/src/comment.genai.mts";
-import { message } from "../gcm/src/gcm.genai.mts";
+import { message } from "../message/src/message.genai.mts";
 
 // Script metadata for the Commit module
 script({
+  model: "github_copilot_chat:gpt-4.1",
   title: "Commit",
   description: "Commit",
 });
