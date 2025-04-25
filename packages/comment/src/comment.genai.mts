@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'url';
+
 /**
  * Script to add comments to files using AI.
  * It uses files from env.files or finds files to comment from git staged files.
@@ -137,7 +139,11 @@ async function addCommentsToFile(file: string, fileContent: string): Promise<{ c
   
   // Determine file extension
   const fileExt = file.split('.').pop()?.toLowerCase();
+
+  const path = fileURLToPath(new URL("./comment.genai.md", import.meta.url));
   
+  const prompt = (await workspace.readText(path)).content;
+
   try {
     // Run the prompt to generate comments
     const result = await runPrompt(
@@ -147,12 +153,7 @@ async function addCommentsToFile(file: string, fileContent: string): Promise<{ c
           language: fileExt,
         });
         
-        _.$`Add helpful and descriptive comments to the FILE_CONTENT. 
-        Focus on complex logic, non-obvious functionality, and important sections.
-        Use the appropriate comment syntax for the file type.
-        Return the entire file with comments added.
-        Preserve all existing code and comments.
-        Don't change any functionality.`;
+        _.$`${prompt}`;
       },
       {
         model: "github_copilot_chat:gpt-4.1",
