@@ -20,4 +20,4 @@ export default [SCRIPT_NAME];
 
  - Check for Typescript errors after every change
 
- - Update the package name in `package.json` to be the name of the script
+ - Update the package name in `package.json` to [SCRIPT_NAME]
