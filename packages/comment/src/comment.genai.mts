@@ -1,158 +1,52 @@
 import { fileURLToPath } from 'url';
+import { envArray, getFiles, stageFiles } from "../../utility/src/utility.ts";
 
-/**
- * Script to add comments to files using AI.
- * It uses files from env.files or finds files to comment from git staged files.
- * If no files are staged, it will stage all files, comment them, and unstage them.
- * Uses GENAISCRIPT_COMMENT_EXTENSIONS environment variable to filter files by extension
- * only when using git staged files.
- */
-
+// Script metadata for the code comment generator tool
 script({
   title: "Comment",
   description: "Add AI-generated comments to your code files",
 });
 
+const promptPath = fileURLToPath(new URL("./comment.genai.md", import.meta.url));
+const prompt = (await workspace.readText(promptPath)).content;
+
+/**
+ * Main entry point for the comment generator.
+ * Finds relevant files, processes them to add comments, and stages the changes.
+ */
 export const comment = async () => {
-  let filesToComment: (string | WorkspaceFile)[] = [];
-  let stagedFiles: string[] = [];
-  let filesThatWereStaged: string[] = [];
-  let filesWeStaged: string[] = [];
-  
-  // Get allowed extensions from environment variable
-  const allowedExtensionsStr = process.env.GENAISCRIPT_COMMENT_EXTENSIONS || "";
-  const allowedExtensions = allowedExtensionsStr ? allowedExtensionsStr.split(',').map(ext => ext.trim().toLowerCase()) : [];
-  
-  // First, check if files were provided directly
-  if (env.files && env.files.length > 0) {
-    console.log("Using files provided in env.files");
-    filesToComment = env.files;
-  } else {
-    // If no files provided, check git staged files
-    console.log("No files provided, checking git staged files");
-    
-    // Make sure we have allowed extensions defined when using git
-    if (allowedExtensions.length === 0) {
-      console.log("No file extensions specified in GENAISCRIPT_COMMENT_EXTENSIONS. Please set this environment variable.");
-      return;
-    }
-    
-    console.log(`Using allowed file extensions: ${allowedExtensions.join(', ')}`);
-    
+  // Retrieve files matching the configured extensions for commenting
+  const files = await getFiles({ include: envArray(process.env.GENAISCRIPT_COMMENT_EXTENSIONS) });
+
+  for (const file of files) {
     try {
-      const stagedChangesOutput = await git.exec(["diff", "--cached", "--name-only"]);
-      
-      if (stagedChangesOutput && stagedChangesOutput.trim().length > 0) {
-        stagedFiles = stagedChangesOutput.trim().split("\n");
-        console.log(`Found ${stagedFiles.length} staged files`);
-        filesToComment = stagedFiles;
-        filesThatWereStaged = [...stagedFiles];
-      } else {
-        // No staged files, stage all files
-        console.log("No staged files found, staging all files");
-        await git.exec(["add", "-A"]);
-        
-        // Get the newly staged files
-        const allStagedOutput = await git.exec(["diff", "--cached", "--name-only"]);
-        if (allStagedOutput && allStagedOutput.trim().length > 0) {
-          stagedFiles = allStagedOutput.trim().split("\n");
-          filesWeStaged = [...stagedFiles];
-          filesToComment = stagedFiles;
-          console.log(`Staged ${stagedFiles.length} files`);
-        } else {
-          console.log("No files to stage, exiting");
-          return;
-        }
-      }
-      
-      // Filter git-provided files by extension
-      const filteredFiles = filesToComment.filter(file => {
-        const filePath = typeof file === 'string' ? file : file.filename;
-        const fileExt = filePath.split('.').pop()?.toLowerCase() || '';
-        return allowedExtensions.includes(fileExt);
-      });
-      
-      console.log(`Filtered ${filesToComment.length} files to ${filteredFiles.length} files with allowed extensions`);
-      filesToComment = filteredFiles;
+      await processFile(file)
     } catch (error) {
-      console.log("Error accessing git repository:", error);
-      return;
-    }
-  }
-
-  // Fail gracefully if no files to comment
-  if (!filesToComment || filesToComment.length === 0) {
-    console.log("No files to comment, exiting");
-    return;
-  }
-
-  // Process each file individually
-  for (const file of filesToComment) {
-    try {
-      const filePath = typeof file === 'string' ? file : file.filename;
-      console.log(`Processing file: ${filePath}`);
-      
-      // Read the file
-      const fileObj = await workspace.readText(filePath);
-      
-      if (!fileObj || !fileObj.content) {
-        console.log(`Skipping empty file: ${filePath}`);
-        continue;
-      }
-
-      // Generate comments for the file
-      const result = await addCommentsToFile(filePath, fileObj.content);
-      
-      // Only write the file back if there was no error
-      if (result.error) {
-        console.log(`Error processing ${filePath}: ${result.error}`);
-        console.log("Skipping file modification due to error");
-        continue;
-      }
-      
-      // Write the commented file back
-      await workspace.writeText(filePath, result.content);
-      
-      // If the file was staged before, stage it again
-      if (filesThatWereStaged.includes(filePath)) {
-        console.log(`Re-staging modified file: ${filePath}`);
-        await git.exec(["add", filePath]);
-      }
-    } catch (error) {
+      // Log errors for individual files but continue processing others
       console.log(`Error processing file ${typeof file === 'string' ? file : file.filename}:`, error);
     }
   }
 
-  // Unstage files that weren't staged before
-  if (filesWeStaged.length > 0) {
-    console.log("Unstaging files that weren't staged before");
-    await git.exec(["restore", "--staged", "."]);
-  }
+  // Stage all processed files for commit
+  await stageFiles({ files });
 };
 
 /**
- * Add comments to a file using AI.
- * Returns an object containing the commented content or an error if one occurred.
+ * Processes a single file by generating comments using an AI prompt and writing the result.
+ * @param file The file object containing filename, content, and type
+ * @returns An object with error information if comment generation fails
  */
-async function addCommentsToFile(file: string, fileContent: string): Promise<{ content: string; error?: string }> {
-  console.log(`Generating comments for ${file}`);
-  
-  // Determine file extension
-  const fileExt = file.split('.').pop()?.toLowerCase();
-
-  const path = fileURLToPath(new URL("./comment.genai.md", import.meta.url));
-  
-  const prompt = (await workspace.readText(path)).content;
-
+async function processFile(file) {
   try {
-    // Run the prompt to generate comments
     const result = await runPrompt(
       (_) => {
-        _.def("FILE_CONTENT", fileContent, {
+        // Define the file content and language for the AI prompt
+        _.def("FILE_CONTENT", file.content, {
           maxTokens: 10000,
-          language: fileExt,
+          language: file.type,
         });
-        
+
+        // Insert the prompt template for comment generation
         _.$`${prompt}`;
       },
       {
@@ -163,19 +57,13 @@ async function addCommentsToFile(file: string, fileContent: string): Promise<{ c
         responseType: "text",
       }
     );
-    
-    if (result.error) {
-      return { content: fileContent, error: result.error.toString() };
-    }
-    
-    if (!result.text) {
-      return { content: fileContent, error: "No output returned from LLM" };
-    }
-    
-    return { content: result.text };
+
+    // Overwrite the file with the commented version
+    await workspace.writeText(file.filename, result.text);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return { content: fileContent, error: errorMessage };
+    // Handle errors during comment generation gracefully
+    console.error(`Error generating comments for file ${typeof file === 'string' ? file : file.filename}:`, error);
+    return { error: `Failed to generate comments for ${typeof file === 'string' ? file : file.filename}` };
   }
 }
 

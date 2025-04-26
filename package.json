@@ -16,6 +16,7 @@
   "workspaces": [
     "packages/commit",
     "packages/comment",
-    "packages/message"
+    "packages/message",
+    "packages/utility"
   ]
 }

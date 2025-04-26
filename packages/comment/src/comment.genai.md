@@ -33,3 +33,5 @@ Add helpful and descriptive comments to the FILE_CONTENT following these guideli
 - Don't modify any functionality or code structure
 - Insert helpful comments where they add value
 - Add appropriate documentation for public APIs and important functions
+- Keep comments clear and concise, don't elaborate when not needed
+- If comments already exist, are up to date, and sufficient, do not add more comments
