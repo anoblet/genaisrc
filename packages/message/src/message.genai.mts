@@ -14,6 +14,7 @@ export const message = async () => {
   try {
     // Get the diff of staged changes
     const diff = await git.diff({
+      excludedPaths: ["package-lock.json"],
       staged: true,
       askStageOnEmpty: false, // Don't ask since we've already handled staging
     });
