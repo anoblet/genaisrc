@@ -9,6 +9,10 @@ script({
 });
 
 export const style = async () => {
+  const maxTokens = process.env.GENAISCRIPT_STYLE_MAX_TOKENS
+    ? parseInt(process.env.GENAISCRIPT_STYLE_MAX_TOKENS, 10)
+    : 10000;
+
   const files = await getFiles({});
 
   if (files.length === 0) {
@@ -23,11 +27,15 @@ export const style = async () => {
   const result = await runPrompt(
     (_) => {
       _.def("CODE_STYLE", codeStyle, {
-        maxTokens: 10000,
+        maxTokens,
       });
 
       _.def("FILE_CONTENT", file.content, {
-        maxTokens: 10000,
+        maxTokens,
+      });
+
+      _.def("MAX_TOKENS", String(maxTokens), {
+        maxTokens,
       });
 
       _.$`${prompt}`;

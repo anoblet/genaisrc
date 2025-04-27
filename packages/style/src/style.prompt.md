@@ -12,6 +12,4 @@ FILE_CONTENT
 
 - Add to, or improve the current code style instructions
 
-- The maximum size of the code style instructions is 10000 tokens
-
-- Emphasize qualities that are unique to my coding style
+- The maximum size of the code style instructions is MAX_TOKENS tokens
