@@ -1,17 +1,23 @@
 import { comment } from "../comment/src/comment.genai.mts";
 import { message } from "../message/src/message.genai.mts";
 
-// Script metadata for the Commit module
+// Script metadata for integration with the generative AI scripting system.
+// Specifies the model, title, and description for this script.
 script({
   model: "github_copilot_chat:gpt-4.1",
   title: "Commit",
   description: "Commit",
 });
 
-// Asynchronous commit function that awaits comment and message actions
+/**
+ * Orchestrates the commit process by sequentially invoking
+ * the comment and message modules. This ensures that both
+ * code commentary and commit messages are generated together,
+ * maintaining consistency and reducing manual steps.
+ */
 export const commit = async () => {
-  await comment(); // Add a comment, likely related to the commit process
-  await message(); // Send or log a message, possibly for commit notification
+  await comment(); // Generate or update code comments before committing
+  await message(); // Generate a commit message after comments are handled
 };
 
 export default commit;

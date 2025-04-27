@@ -18,8 +18,14 @@ export const comment = async () => {
   // Retrieve files matching the configured extensions for commenting
   const files = await getFiles({ include: envArray(process.env.GENAISCRIPT_COMMENT_EXTENSIONS) });
 
+  if (files.length === 0) {
+    console.log("No files found to comment.");
+    return;
+  }
+
   for (const file of files) {
     try {
+      // Attempt to process each file individually, allowing the script to continue on error
       await processFile(file)
     } catch (error) {
       // Log errors for individual files but continue processing others
