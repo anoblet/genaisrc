@@ -8,27 +8,10 @@ export const message = async () => {
   script({
     model: "github_copilot_chat:gpt-4.1",
     title: "Message",
-    description: "Generate a conventional commit message for staged changes"
+    description: "Generate a conventional commit message for staged changes",
   });
 
   try {
-    // Check if there are any staged changes
-    const stagedChanges = await git.exec(["diff", "--cached", "--name-only"]);
-    const hasStaged = stagedChanges && stagedChanges.trim().length > 0;
-
-    // If no files are staged, stage all files
-    if (!hasStaged) {
-      console.log("No files staged. Staging all files...");
-      await git.exec(["add", "-A"]);
-      
-      // Verify files were staged successfully
-      const newStagedChanges = await git.exec(["diff", "--cached", "--name-only"]);
-      if (!newStagedChanges || !newStagedChanges.trim().length) {
-        console.log("No changes to commit. Exiting.");
-        return;
-      }
-    }
-
     // Get the diff of staged changes
     const diff = await git.diff({
       staged: true,
@@ -48,7 +31,9 @@ export const message = async () => {
     // Chunk the diff if it's large
     const chunks = await tokenizers.chunk(diff, { chunkSize });
     if (chunks.length > 1) {
-      console.log(`Staged changes chunked into ${chunks.length} parts due to size`);
+      console.log(
+        `Staged changes chunked into ${chunks.length} parts due to size`
+      );
     }
 
     // Generate a commit message for each chunk, then combine them
@@ -61,7 +46,7 @@ export const message = async () => {
             language: "diff",
             detectPromptInjection: "available",
           });
-          
+
           ctx.$`Generate a git conventional commit message that summarizes the changes in GIT_DIFF.
           
           Follow the Conventional Commits specification (https://www.conventionalcommits.org/):
@@ -89,7 +74,10 @@ export const message = async () => {
       );
 
       if (result.error) {
-        console.error("Error generating commit message for chunk:", result.error);
+        console.error(
+          "Error generating commit message for chunk:",
+          result.error
+        );
         continue;
       }
 
@@ -132,12 +120,16 @@ export const message = async () => {
       );
 
       if (!summaryResult.error) {
-        commitMessage = (summaryResult.fences?.[0]?.content || summaryResult.text).trim();
+        commitMessage = (
+          summaryResult.fences?.[0]?.content || summaryResult.text
+        ).trim();
       }
     }
-    
+
     if (!commitMessage) {
-      console.log("No commit message could be generated. Check your LLM configuration.");
+      console.log(
+        "No commit message could be generated. Check your LLM configuration."
+      );
       return;
     }
 
@@ -146,7 +138,6 @@ export const message = async () => {
     console.log(commitMessage);
     const commitResult = await git.exec(["commit", "-m", commitMessage]);
     console.log(commitResult);
-
   } catch (error) {
     console.error("Error occurred:", error);
   }
