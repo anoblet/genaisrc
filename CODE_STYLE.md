@@ -1,23 +1,24 @@
-Additions and improvements to CODE_STYLE based on the provided FILE_CONTENT:
-
-- Prefer environment variables for configuration, with sensible defaults.
-- Parse and validate environment variables at the point of use.
+- Prefer environment variables for configuration, providing sensible defaults and documenting their purpose.
+- Parse and validate environment variables at the point of use; handle invalid or missing values gracefully.
 - Use template literals for string interpolation, especially for dynamic values.
-- Pass configuration values (like maxTokens) explicitly to functions and prompt definitions.
+- Pass configuration values (such as maxTokens) explicitly to functions and prompt definitions.
 - Use String() for explicit type conversion when passing values to APIs that expect strings.
-- Always check for empty or missing data before proceeding with main logic.
-- Use early returns to handle edge cases and errors.
-- Prefer single quotes for strings, but use double quotes if required by project or tooling.
-- When reading files or resources, handle errors gracefully and provide clear messages.
-- When invoking prompts or external APIs, group related definitions together for clarity.
+- Always check for empty or missing data before proceeding with main logic; use early returns to handle edge cases and errors.
+- Prefer single quotes for strings, unless double quotes are required by project or tooling.
+- When reading files or resources, handle errors gracefully and provide clear, actionable messages.
+- Group related prompt or API definitions together for clarity.
 - Use clear, imperative function and variable names that reflect their purpose.
 - Prefer destructuring assignment for extracting values from objects or arrays.
-- When exporting, use named exports for multiple exports, default export for single main export.
-- Document the purpose of environment variables and configuration options in comments.
+- Use named exports for multiple exports, default export for a single main export.
 - Keep configuration and constants at the top of the file, before main logic.
-- Use async/await for all asynchronous operations, and handle errors with try/catch where appropriate.
-- When writing output files, ensure the output is validated or sanitized if necessary.
+- Use async/await for all asynchronous operations, handling errors with try/catch where appropriate.
+- When writing output files, validate or sanitize output as necessary.
 - Use consistent formatting for function arguments and object properties, aligning for readability.
 - Prefer explicitness in function calls and API usage, avoiding implicit behavior.
 - Keep code modular and focused, splitting large files or functions as needed.
 - Update comments and documentation to reflect changes in logic or configuration.
+- Avoid hardcoding values; use configuration or constants instead.
+- Use clear log messages for user-facing output, especially for error or status reporting.
+- Ensure all asynchronous operations are awaited to avoid unhandled promise rejections.
+- Document the purpose and usage of each exported function.
+- Structure scripts to allow for easy extension or modification of configuration and logic.
