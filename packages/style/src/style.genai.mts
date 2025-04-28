@@ -13,7 +13,7 @@ script({
 });
 
 const processFile = async (file) => {
-  const codeStyle = await workspace.readText("CODE_STYLE.md");
+  const codeStyle = await workspace.readText("CODE-STYLE.md");
   
   const result = await runPrompt(
     (_) => {
@@ -37,7 +37,7 @@ const processFile = async (file) => {
     },
   );
 
-  await workspace.writeText("CODE_STYLE.md", result.text);
+  await workspace.writeText("CODE-STYLE.md", result.text);
 };
 
 export const style = async () => {
