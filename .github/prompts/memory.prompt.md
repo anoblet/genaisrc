@@ -23,3 +23,14 @@ Follow these steps for each interaction:
      c) Store code patterns, conventions and technical decisions as observations
      d) Maintain a history of solutions to common problems or bugs
      e) Track established best practices specific to GenAIScript development
+     f) Record specific implementation details such as:
+        - Function signatures and their purpose
+        - Configuration options and environment variables
+        - File naming conventions and organization patterns
+        - Package dependencies and their versions
+        - External API integrations and authentication methods
+     g) Document performance considerations and optimizations
+     h) Note any challenges encountered and their resolutions
+     i) Capture comments about future plans or TODOs mentioned in code or discussions
+     j) Record specific examples of code usage for reference
+     k) Maintain version-specific information when relevant
