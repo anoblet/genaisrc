@@ -1,3 +1,7 @@
+- Before responding to any requests, remember what you have learned before.
+
+- After responding to any requests, remember anything important that you have
+
 - Check if a package already exists before creating a new one
 
 - Use the following format for the script:
