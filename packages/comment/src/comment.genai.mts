@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 import { envArray, getFiles, stageFiles } from "../../utility/src/utility.ts";
 
 // Script metadata for the code comment generator tool
@@ -7,7 +7,9 @@ script({
   description: "Add AI-generated comments to your code files",
 });
 
-const promptPath = fileURLToPath(new URL("./comment.genai.md", import.meta.url));
+const promptPath = fileURLToPath(
+  new URL("./comment.genai.md", import.meta.url),
+);
 const prompt = (await workspace.readText(promptPath)).content;
 
 /**
@@ -15,26 +17,37 @@ const prompt = (await workspace.readText(promptPath)).content;
  * Finds relevant files, processes them to add comments, and stages the changes.
  */
 export const comment = async () => {
-  // Retrieve files matching the configured extensions for commenting
-  const files = await getFiles({ include: envArray(process.env.GENAISCRIPT_COMMENT_EXTENSIONS) });
+  try {
+    // Retrieve files matching the configured extensions for commenting
+    const files = await getFiles({
+      include: envArray(process.env.GENAISCRIPT_COMMENT_EXTENSIONS),
+    });
 
-  if (files.length === 0) {
-    console.log("No files found to comment.");
-    return;
-  }
-
-  for (const file of files) {
-    try {
-      // Attempt to process each file individually, allowing the script to continue on error
-      await processFile(file)
-    } catch (error) {
-      // Log errors for individual files but continue processing others
-      console.log(`Error processing file ${typeof file === 'string' ? file : file.filename}:`, error);
+    if (files.length === 0) {
+      console.log("No files found to comment.");
+      return;
     }
-  }
 
-  // Stage all processed files for commit
-  await stageFiles({ files });
+    // Iterate through each file and attempt to process it for comment generation
+    for (const file of files) {
+      try {
+        // Attempt to process each file individually, allowing the script to continue on error
+        await processFile(file);
+      } catch (error) {
+        // Log errors for individual files but continue processing others
+        console.log(
+          `Error processing file ${typeof file === "string" ? file : file.filename}:`,
+          error,
+        );
+      }
+    }
+
+    // Stage all processed files for commit
+    await stageFiles({ files });
+  } catch (error) {
+    // Handle any errors that occur during the overall process
+    console.error("An error occurred while generating comments:", error);
+  }
 };
 
 /**
@@ -44,6 +57,7 @@ export const comment = async () => {
  */
 async function processFile(file) {
   try {
+    // Run the AI prompt to generate comments for the file content
     const result = await runPrompt(
       (_) => {
         // Define the file content and language for the AI prompt
@@ -57,19 +71,26 @@ async function processFile(file) {
       },
       {
         model: "github_copilot_chat:gpt-4.1",
-        label: "generate code comments",
+        label: "Comment Code",
         system: ["system.assistant"],
         systemSafety: true,
         responseType: "text",
-      }
+      },
     );
 
     // Overwrite the file with the commented version
     await workspace.writeText(file.filename, result.text);
   } catch (error) {
-    // Handle errors during comment generation gracefully
-    console.error(`Error generating comments for file ${typeof file === 'string' ? file : file.filename}:`, error);
-    return { error: `Failed to generate comments for ${typeof file === 'string' ? file : file.filename}` };
+    console.error(`Error generating comment for file ${file.filename}:`, error);
+
+    // Return an object with error information if comment generation fails
+    return {
+      error: {
+        message: `Failed to generate comment for ${file.filename}`,
+        details: error.message,
+      },
+      file: file.filename,
+    };
   }
 }
 

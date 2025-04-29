@@ -1,8 +1,8 @@
 import { comment } from "../comment/src/comment.genai.mts";
 import { message } from "../message/src/message.genai.mts";
+import { style } from "../style/src/style.genai.mts";
 
-// Script metadata for integration with the generative AI scripting system.
-// Specifies the model, title, and description for this script.
+// Register script metadata for integration with the automation framework
 script({
   model: "github_copilot_chat:gpt-4.1",
   title: "Commit",
@@ -10,14 +10,17 @@ script({
 });
 
 /**
- * Orchestrates the commit process by sequentially invoking
- * the comment and message modules. This ensures that both
- * code commentary and commit messages are generated together,
- * maintaining consistency and reducing manual steps.
+ * Orchestrates the commit workflow:
+ * 1. Learns code style to ensure consistency.
+ * 2. Generates descriptive code comments.
+ * 3. Produces a commit message and performs the commit.
+ * 
+ * This function abstracts the multi-step commit process to enforce best practices and maintain code quality.
  */
 export const commit = async () => {
-  await comment(); // Generate or update code comments before committing
-  await message(); // Generate a commit message after comments are handled
+  await style(); // Learn code style (ensures future steps follow project conventions)
+  await comment(); // Generate comments (documents code for maintainability)
+  await message(); // Generate commit message and commit (finalizes the workflow)
 };
 
 export default commit;
