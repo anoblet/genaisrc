@@ -1,4 +1,4 @@
-import { getFiles } from "../../utility/src/utility.ts";
+import { envBoolean, getFiles, stageFiles } from "../../utility/src/utility.ts";
 import { fileURLToPath } from "url";
 
 // Determine the maximum number of tokens to use for style prompts, allowing override via environment variable
@@ -11,6 +11,11 @@ const promptPath = fileURLToPath(new URL("style.prompt.md", import.meta.url));
 // Load the style prompt template content from disk
 const prompt = (await workspace.readText(promptPath)).content;
 
+// Allow override of the style prompt path via environment variable for flexibility in CI or local runs
+const stylePath =
+  process.env.GENAISCRIPT_STYLE_PROMPT_PATH ||
+  "../../../.github/prompts/style.prompt.md";
+
 // Register this script with a title for discoverability in the script system
 script({
   title: "Style",
@@ -18,15 +23,16 @@ script({
 
 /**
  * Processes a single file by applying the code style prompt and writing the result.
+ * 
+ * Loads the code style definition, runs the prompt engine with the file content and style,
+ * and writes the result back to the style prompt file (potentially overwriting the template).
+ * 
  * @param file The file object to process, expected to have a .content property
  */
 const processFile = async (file) => {
-  // Allow override of the style prompt path via environment variable for flexibility in CI or local runs
-  const stylePath = process.env.GENAISCRIPT_STYLE_PROMPT_PATH || "../../../.github/prompts/style.prompt.md";
-
-  // Load the code style definition from the specified path
+  // Load the code style definition from the specified path (may be overridden by env)
   const codeStyle = await workspace.readText(stylePath);
-  
+
   // Run the style prompt using the loaded code style and file content as context
   const result = await runPrompt(
     (_) => {
@@ -53,17 +59,27 @@ const processFile = async (file) => {
   );
 
   // Overwrite the style prompt file with the result, which may be an error (potentially unintended)
+  // NOTE: This may unintentionally overwrite the style prompt template with model output
   await workspace.writeText(stylePath, result.text);
 };
 
 /**
  * Main entry point for the style script.
- * Finds all files to style and processes each one sequentially.
+ * 
+ * Checks if style processing is enabled, finds all files to style, processes each sequentially,
+ * and stages the style prompt file for commit.
  */
 export const style = async () => {
+  if (!envBoolean(process.env.GENAISCRIPT_STYLE_ENABLED)) {
+    // Early exit if style processing is disabled via environment variable
+    console.log("Style is disabled");
+    return;
+  }
+
   const files = await getFiles({});
 
   if (files.length === 0) {
+    // No files to process, exit early
     console.log("No files found to style.");
     return;
   }
@@ -72,6 +88,9 @@ export const style = async () => {
   for (const file of files) {
     await processFile(file);
   }
+
+  // Stage the prompt file (possibly for git commit)
+  await stageFiles({ files: [{ filename: stylePath }] });
 };
 
 export default style;

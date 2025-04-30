@@ -9,19 +9,19 @@
  * @returns Filtered array of files
  */
 export const filterFiles = ({ files, include = [], exclude = [] }) => {
-    if (!files || files.length === 0) return [];
-    if (include.length === 0 && exclude.length === 0) return files;
-    return files.filter((file) => {
-        // Support both string filenames and file objects
-        const filename = typeof file === "string" ? file : file.filename;
-        // Extract file extension (handles files with no extension gracefully)
-        const ext = filename.split('.').pop()?.toLowerCase() || '';
-        // If include is empty, all extensions are considered included; otherwise, check membership
-        const isIncluded = include.length === 0 || include.includes(ext);
-        // Exclude takes precedence: if extension is in exclude, always filter out
-        const isExcluded = exclude.length > 0 && exclude.includes(ext);
-        return isIncluded && !isExcluded;
-    });
+  if (!files || files.length === 0) return [];
+  if (include.length === 0 && exclude.length === 0) return files;
+  return files.filter((file) => {
+    // Support both string filenames and file objects
+    const filename = typeof file === "string" ? file : file.filename;
+    // Extract file extension (handles files with no extension gracefully)
+    const ext = filename.split(".").pop()?.toLowerCase() || "";
+    // If include is empty, all extensions are considered included; otherwise, check membership
+    const isIncluded = include.length === 0 || include.includes(ext);
+    // Exclude takes precedence: if extension is in exclude, always filter out
+    const isExcluded = exclude.length > 0 && exclude.includes(ext);
+    return isIncluded && !isExcluded;
+  });
 };
 
 /**
@@ -31,11 +31,11 @@ export const filterFiles = ({ files, include = [], exclude = [] }) => {
  * @returns The array itself or undefined
  */
 export const getArray = (array) => {
-    // Return undefined for undefined or empty arrays to simplify fallback checks
-    if (array === undefined || array.length == 0) return undefined;
+  // Return undefined for undefined or empty arrays to simplify fallback checks
+  if (array === undefined || array.length == 0) return undefined;
 
-    return array;
-}
+  return array;
+};
 
 /**
  * Retrieves a list of files, prioritizing env.files, then staged git files.
@@ -44,13 +44,20 @@ export const getArray = (array) => {
  * @param include Array of file extensions to include (optional)
  * @returns Promise resolving to filtered file list
  */
-export const getFiles = async ({ exclude, include }: { exclude?, include?}) => {
-    // Prefer env.files, fallback to staged git files, or undefined if none
-    // getArray ensures only non-empty arrays are used for selection
-    const files = getArray(env.files) || getArray(await git.listFiles("staged")) || undefined;
-    // Always apply filterFiles, even if files is undefined (handled by filterFiles)
-    const filteredFiles = filterFiles({ files, include, exclude });
-    return filteredFiles;
+export const getFiles = async ({
+  exclude,
+  include,
+}: {
+  exclude?;
+  include?;
+}) => {
+  // Prefer env.files, fallback to staged git files, or undefined if none
+  // getArray ensures only non-empty arrays are used for selection
+  const files =
+    getArray(env.files) || getArray(await git.listFiles("staged")) || undefined;
+  // Always apply filterFiles, even if files is undefined (handled by filterFiles)
+  const filteredFiles = filterFiles({ files, include, exclude });
+  return filteredFiles;
 };
 
 /**
@@ -62,18 +69,18 @@ export const getFiles = async ({ exclude, include }: { exclude?, include?}) => {
  * @returns Promise resolving to list of staged files
  */
 export const stageFiles = async ({ files } = { files: [] }) => {
-    if (files.length > 0) {
-        for (const file of files) {
-            // Stage each specified file individually; avoids staging unrelated changes
-            await git.exec(["add", file.filename]);
-        }
-    } else {
-        // If no files specified, stage all changes (equivalent to 'git add -A')
-        await git.exec(["add", "-A"]);
+  if (files.length > 0) {
+    for (const file of files) {
+      // Stage each specified file individually; avoids staging unrelated changes
+      await git.exec(["add", file.filename]);
     }
+  } else {
+    // If no files specified, stage all changes (equivalent to 'git add -A')
+    await git.exec(["add", "-A"]);
+  }
 
-    // Always return the current list of staged files after staging operation
-    return await git.listFiles("staged");
+  // Always return the current list of staged files after staging operation
+  return await git.listFiles("staged");
 };
 
 /**
@@ -84,8 +91,22 @@ export const stageFiles = async ({ files } = { files: [] }) => {
  * @returns Array of normalized strings
  */
 export const envArray = (envVar) => {
-    // Defensive: handle undefined, null, or empty string input
-    if (!envVar || envVar.length === 0) return [];
-    // Normalize: split, trim, and lowercase each entry for consistent matching
-    return envVar.split(',').map((item) => item.trim().toLowerCase());
-}
+  // Defensive: handle undefined, null, or empty string input
+  if (!envVar || envVar.length === 0) return [];
+  // Normalize: split, trim, and lowercase each entry for consistent matching
+  return envVar.split(",").map((item) => item.trim().toLowerCase());
+};
+
+export const envBoolean = (value) => {
+  if (value === undefined || value === null || value.length === 0) {
+    return false; // Default to false for undefined, null, or empty strings
+  }
+  
+  if (value.toLowerCase() === "true") {
+    return true;
+  } else if (value.toLowerCase() === "false") {
+    return false;
+  } else {
+    return false; // Default to false for other cases
+  }
+};
