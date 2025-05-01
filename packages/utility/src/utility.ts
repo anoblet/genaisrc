@@ -51,12 +51,15 @@ export const getFiles = async ({
   exclude?;
   include?;
 }) => {
-  // Prefer env.files, fallback to staged git files, or undefined if none
-  // getArray ensures only non-empty arrays are used for selection
+  const stageAll = envBoolean(process.env.GENAISCRIPT_STAGE_ALL);
+
+  // Prefer env.files, then staged files, then stage all if configured
   const files =
-    getArray(env.files) || getArray(await git.listFiles("staged")) || undefined;
+    getArray(env.files) || getArray(await git.listFiles("staged")) || (stageAll ? stageFiles() : false);
+
   // Always apply filterFiles, even if files is undefined (handled by filterFiles)
   const filteredFiles = filterFiles({ files, include, exclude });
+
   return filteredFiles;
 };
 
@@ -101,7 +104,7 @@ export const envBoolean = (value) => {
   if (value === undefined || value === null || value.length === 0) {
     return false; // Default to false for undefined, null, or empty strings
   }
-  
+
   if (value.toLowerCase() === "true") {
     return true;
   } else if (value.toLowerCase() === "false") {
