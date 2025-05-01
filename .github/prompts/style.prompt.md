@@ -19,6 +19,8 @@
 - Prefer early returns for invalid or trivial cases to reduce nesting.
 - Favor immutability and avoid mutating input arguments.
 - Use helper functions for repeated logic and to keep functions short.
+- Prefer composition over inheritance for code reuse.
+- Use consistent whitespace and indentation throughout the codebase.
 
 ## TypeScript and Typing
 - Add explicit TypeScript type annotations for all function parameters and return types, including `Promise` return types.
@@ -30,6 +32,8 @@
 - Ensure all `.mts` files have complete type coverage.
 - Use union types for parameters that accept multiple shapes (e.g., string | FileObject).
 - Prefer explicit destructuring for object parameters.
+- Use readonly properties in interfaces where mutation is not intended.
+- Prefer enums or literal types for known value sets.
 
 ## Functions
 - Use arrow functions for all function definitions.
@@ -42,6 +46,8 @@
 - Export only what is necessary; keep helpers private unless needed externally.
 - Document all exported functions with JSDoc, including parameter and return types, and edge case notes.
 - Always apply filtering or transformation functions, even if input is undefined, to ensure consistent output types.
+- Use async/await for asynchronous code, and always annotate async function return types.
+- Avoid deeply nested callbacks or promise chains.
 
 ## Arrays and Objects
 - Use array methods (`map`, `filter`, etc.) for transformations and filtering.
@@ -52,6 +58,7 @@
 - Use plural names for arrays, singular for single items.
 - Define interfaces for structured objects and use them consistently.
 - Normalize array and object data before processing (e.g., lowercase, trim).
+- Prefer `Record<string, T>` for key-value maps over plain objects when appropriate.
 
 ## String Handling
 - Normalize strings for comparison (e.g., `toLowerCase()`, `trim()`).
@@ -60,6 +67,7 @@
 - Avoid concatenation with non-string types.
 - Use constants for repeated string values.
 - Always document normalization and transformation steps in comments.
+- Validate and sanitize external string input.
 
 ## Error Handling
 - Fail gracefully and return safe defaults (e.g., empty arrays, `undefined`, or `false`).
@@ -69,6 +77,7 @@
 - Provide actionable feedback in error messages.
 - Use typed error responses (e.g., `ErrorResponse` interface) for error handling.
 - Prefer returning error objects or safe defaults over throwing exceptions.
+- Always include error context (e.g., function name, parameters) in logs or error objects.
 
 ## Comments and Documentation
 - Use JSDoc for all exported functions, describing parameters, return values, and edge cases.
@@ -78,6 +87,7 @@
 - Document the purpose of special files and directories (e.g., `.specstory/.what-is-this.md`).
 - Document all interfaces and types.
 - Summarize rationale for type additions or changes in code comments or commit messages.
+- Use TODO and FIXME comments sparingly and resolve them promptly.
 
 ## Naming
 - Use camelCase for variables and functions.
@@ -86,6 +96,7 @@
 - Avoid abbreviations unless widely understood.
 - Name files and directories to reflect their content and purpose.
 - Use clear, consistent naming for parameters, especially in destructured objects.
+- Prefix boolean variables and functions with `is`, `has`, or `can` for clarity.
 
 ## Git Integration
 - When interacting with git, prefer explicit file operations over broad actions.
@@ -94,6 +105,7 @@
 - Handle git errors gracefully and report actionable feedback.
 - Exclude dependencies and generated files from version control (e.g., `node_modules`).
 - Stage only specified files when possible to avoid unintended changes.
+- Document any git-related side effects or assumptions in code comments.
 
 ## Environment Variables
 - Normalize and validate environment variable input.
@@ -102,6 +114,7 @@
 - Provide defaults for optional environment variables.
 - Store environment configuration in a dedicated `.env` file.
 - Always document normalization and conversion logic for environment variables.
+- Avoid leaking sensitive environment variable values in logs or errors.
 
 ## Example Patterns
 - Defensive checks for undefined, null, or empty values.
@@ -110,6 +123,7 @@
 - Use helper functions for repeated logic.
 - Structure exports for clarity and discoverability.
 - Prefer returning arrays or objects over null or undefined, unless undefined is a meaningful signal.
+- Use type guards for runtime type validation when handling unknown input.
 
 ## Improvements from Example
 - Add TypeScript types and interfaces for all structured data.
@@ -120,3 +134,4 @@
 - Summarize changes and document rationale for type additions in code comments or commit messages.
 - Use union types and explicit destructuring for flexible, type-safe APIs.
 - Always apply filters and transformations defensively, even if input is undefined or empty.
+- Review and refactor code regularly to maintain adherence to these guidelines.

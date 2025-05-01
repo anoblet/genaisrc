@@ -14,4 +14,6 @@ FILE_CONTENT
 
 - The maximum size of the code style instructions is MAX_TOKENS tokens
 
-- The goal is to iterate and improve, not replace 
+- The goal is to iterate and improve, not replace
+
+- If there is nothing to review, return the original file content
