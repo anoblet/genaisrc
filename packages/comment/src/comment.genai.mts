@@ -1,5 +1,7 @@
 import { fileURLToPath } from "url";
-import { envArray, getFiles, stageFiles } from "../../utility/src/utility.ts";
+import { envArray, getFiles, getModel, stageFiles } from "../../utility/src/utility.ts";
+
+const model = getModel();
 
 // Script metadata for the code comment generator tool
 script({
@@ -70,7 +72,7 @@ async function processFile(file) {
         _.$`${prompt}`;
       },
       {
-        model: "github_copilot_chat:gpt-4.1",
+        model,
         label: "Comment Code",
         system: ["system.assistant"],
         systemSafety: true,

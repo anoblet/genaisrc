@@ -113,3 +113,7 @@ export const envBoolean = (value) => {
     return false; // Default to false for other cases
   }
 };
+
+export const getModel = () => {
+  return process.env.GENAISCRIPT_MODEL;
+}

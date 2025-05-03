@@ -4,15 +4,20 @@
  * generates a commit message, and commits the changes.
  */
 
+/**
+ * Generates a conventional commit message for staged git changes and commits them.
+ * Handles large diffs by chunking and summarizing, and ensures compliance with Conventional Commits.
+ *
+ * @returns {Promise<void>} Resolves when commit is complete or exits early if no changes.
+ */
 export const message = async () => {
   script({
-    model: "github_copilot_chat:gpt-4.1",
     title: "Message",
     description: "Generate a conventional commit message for staged changes",
   });
 
   try {
-    // Get the diff of staged changes
+    // Get the diff of staged changes, excluding package-lock.json for noise reduction
     const diff = await git.diff({
       excludedPaths: ["package-lock.json"],
       staged: true,
@@ -29,7 +34,7 @@ export const message = async () => {
     const chunkSize = 10000;
     const maxChunks = 4; // Safeguard against huge commits
 
-    // Chunk the diff if it's large
+    // Chunk the diff if it's large to avoid exceeding LLM context limits
     const chunks = await tokenizers.chunk(diff, { chunkSize });
     if (chunks.length > 1) {
       console.log(
@@ -40,6 +45,7 @@ export const message = async () => {
     // Generate a commit message for each chunk, then combine them
     let message = "";
     for (const chunk of chunks) {
+      // For each chunk, prompt the LLM to generate a conventional commit message
       const result = await runPrompt(
         (ctx) => {
           ctx.def("GIT_DIFF", chunk, {
@@ -75,6 +81,7 @@ export const message = async () => {
       );
 
       if (result.error) {
+        // Log and skip chunk if LLM fails to generate a message
         console.error(
           "Error generating commit message for chunk:",
           result.error
@@ -82,6 +89,7 @@ export const message = async () => {
         continue;
       }
 
+      // Prefer content from code fences if present, else use plain text
       message += (result.fences?.[0]?.content || result.text).trim() + "\n";
     }
 
@@ -121,6 +129,7 @@ export const message = async () => {
       );
 
       if (!summaryResult.error) {
+        // Use the summarized commit message if available
         commitMessage = (
           summaryResult.fences?.[0]?.content || summaryResult.text
         ).trim();
@@ -128,6 +137,7 @@ export const message = async () => {
     }
 
     if (!commitMessage) {
+      // Defensive: If LLM fails to generate any message, abort commit
       console.log(
         "No commit message could be generated. Check your LLM configuration."
       );
@@ -140,6 +150,7 @@ export const message = async () => {
     const commitResult = await git.exec(["commit", "-m", commitMessage]);
     console.log(commitResult);
   } catch (error) {
+    // Catch-all for unexpected errors in the commit process
     console.error("Error occurred:", error);
   }
 };

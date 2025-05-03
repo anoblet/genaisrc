@@ -1,5 +1,8 @@
-import { envBoolean, getFiles, stageFiles } from "../../utility/src/utility.ts";
+import { envBoolean, getFiles, getModel, stageFiles } from "../../utility/src/utility.ts";
 import { fileURLToPath } from "url";
+
+// Initialize the model used for prompt execution
+const model = getModel();
 
 // Determine the maximum number of tokens to use for style prompts, allowing override via environment variable
 const maxTokens = process.env.GENAISCRIPT_STYLE_TOKENS
@@ -50,7 +53,7 @@ const processFile = async (file) => {
       _.$`${prompt}`;
     },
     {
-      model: "github_copilot_chat:gpt-4.1", // Specify the LLM model to use for style suggestions
+      model,
       label: "Style Code",
       system: ["system.assistant"], // Use system prompt for assistant role
       systemSafety: true, // Enable safety checks for model output
