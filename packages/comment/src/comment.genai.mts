@@ -1,17 +1,25 @@
 import { fileURLToPath } from "url";
-import { envArray, getFiles, getModel, stageFiles } from "../../utility/src/utility.ts";
+import { envArray, envBoolean, getFiles, getModel, stageFiles } from "../../utility/src/utility.ts";
 
+// Determine if comment generation is enabled via environment variable
+const enabled = envBoolean(process.env.GENAISCRIPT_COMMENT_ENABLED);
 const model = getModel();
 
-// Script metadata for the code comment generator tool
+/**
+ * Script metadata for the code comment generator tool.
+ * Used by the script runner to provide context and description.
+ */
 script({
   title: "Comment",
-  description: "Add AI-generated comments to your code files",
+  description: "Comment",
 });
 
+// Resolve the path to the AI prompt template for comment generation
 const promptPath = fileURLToPath(
   new URL("./comment.genai.md", import.meta.url),
 );
+
+// Read the prompt template content for use in AI requests
 const prompt = (await workspace.readText(promptPath)).content;
 
 /**
@@ -20,6 +28,14 @@ const prompt = (await workspace.readText(promptPath)).content;
  */
 export const comment = async () => {
   try {
+    // Check if the comment generation feature is enabled
+    if (!enabled) {
+      console.log("Comment generation is disabled.");
+      return;
+    }
+
+    console.log("Starting comment generation...");
+
     // Retrieve files matching the configured extensions for commenting
     const files = await getFiles({
       include: envArray(process.env.GENAISCRIPT_COMMENT_EXTENSIONS),
@@ -50,15 +66,20 @@ export const comment = async () => {
     // Handle any errors that occur during the overall process
     console.error("An error occurred while generating comments:", error);
   }
+
+  console.log("Comment generation completed.");
 };
 
 /**
  * Processes a single file by generating comments using an AI prompt and writing the result.
+ * 
  * @param file The file object containing filename, content, and type
  * @returns An object with error information if comment generation fails
  */
 async function processFile(file) {
   try {
+    console.log(`Processing file: ${file.filename}`);
+
     // Run the AI prompt to generate comments for the file content
     const result = await runPrompt(
       (_) => {

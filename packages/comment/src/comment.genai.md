@@ -66,3 +66,4 @@ Add helpful and descriptive comments to the FILE_CONTENT following these guideli
 - Use single-line comments for implementation details
 - Keep comments clear and concise, don't elaborate when not needed
 - If comments already exist, are up to date, and sufficient, do not add more comments
+- Do not add line numbers to the output
