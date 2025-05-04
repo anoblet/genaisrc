@@ -3,6 +3,7 @@ import { envArray, envBoolean, getFiles, getModel, stageFiles } from "../../util
 
 // Determine if comment generation is enabled via environment variable
 const enabled = envBoolean(process.env.GENAISCRIPT_COMMENT_ENABLED);
+
 const model = getModel();
 
 /**
@@ -100,6 +101,11 @@ async function processFile(file) {
         responseType: "text",
       },
     );
+
+    // If the AI declines to generate a comment, log and skip writing
+    if("Sorry, I can't assist with that." === result.text) {
+      console.log(`No comment generated for file: ${file.filename}`);
+    }
 
     // Overwrite the file with the commented version
     await workspace.writeText(file.filename, result.text);
