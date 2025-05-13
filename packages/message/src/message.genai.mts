@@ -1,3 +1,7 @@
+import { getModel } from "../../utility/src/utility.ts"
+
+const model = getModel();
+
 /**
  * Script to generate git commit messages in the conventional commit format.
  * It automatically checks for staged changes (or stages all files if none are staged),
@@ -12,6 +16,7 @@
  */
 export const message = async () => {
   script({
+    model,
     title: "Message",
     description: "Generate a conventional commit message for staged changes",
   });
@@ -72,7 +77,7 @@ export const message = async () => {
           - Do NOT confuse removed lines starting with '-' and added lines starting with '+'`;
         },
         {
-          model: "large",
+          model,
           label: "generate commit message",
           system: ["system.assistant"],
           systemSafety: true,
@@ -120,7 +125,7 @@ export const message = async () => {
           - Do NOT use markdown syntax, quotes, or code blocks`;
         },
         {
-          model: "large",
+          model,
           label: "summarize chunk commit messages",
           system: ["system.assistant"],
           systemSafety: true,

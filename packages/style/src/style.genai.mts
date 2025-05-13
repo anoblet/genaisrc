@@ -21,6 +21,7 @@ const stylePath =
 
 // Register this script with a title for discoverability in the script system
 script({
+  model,
   title: "Style",
 });
 

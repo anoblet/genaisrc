@@ -11,6 +11,7 @@ const model = getModel();
  * Used by the script runner to provide context and description.
  */
 script({
+  model,
   title: "Comment",
   description: "Comment",
 });
@@ -31,7 +32,7 @@ export const comment = async () => {
   try {
     // Check if the comment generation feature is enabled
     if (!enabled) {
-      console.log("Comment generation is disabled.");
+      console.log("Comments are disabled.");
       return;
     }
 
