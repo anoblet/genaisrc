@@ -53,7 +53,10 @@ export const getFiles = async ({
 }) => {
   const stageAll = envBoolean(process.env.GENAISCRIPT_STAGE_ALL);
 
-  // Prefer env.files, then staged files, then stage all if configured
+  // Collect candidate files from highest to lowest priority:
+  // 1. Files specified in env.files
+  // 2. Currently staged files in git
+  // 3. If stageAll is true, stage all files and use that list
   const files =
     getArray(env.files) || getArray(await git.listFiles("staged")) || (stageAll ? stageFiles() : false);
 
@@ -115,5 +118,8 @@ export const envBoolean = (value) => {
 };
 
 export const getModel = () => {
+  // Retrieve the model identifier from the environment for downstream API/model selection
   return process.env.GENAISCRIPT_MODEL;
 }
+
+export const model = getModel();
