@@ -1,7 +1,7 @@
 import { comment } from "../../comment/src/comment.genai.mts";
 import { message } from "../../message/src/message.genai.mts";
 import { style } from "../../style/src/style.genai.mts";
-import { getModel } from "../../utility/src/utility.ts"
+import { getModel } from "../../utility/src/utility.ts";
 
 // Retrieve the current AI model configuration for use in script registration and downstream tasks
 const model = getModel();
@@ -18,9 +18,9 @@ script({
  * 1. Learns code style to ensure consistency.
  * 2. Generates descriptive code comments.
  * 3. Produces a commit message and performs the commit.
- * 
+ *
  * This function abstracts the multi-step commit process to enforce best practices and maintain code quality.
- * 
+ *
  * @returns {Promise<void>} Resolves when the commit workflow is complete
  */
 export const commit = async () => {
