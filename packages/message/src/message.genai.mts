@@ -1,6 +1,4 @@
-import { getModel } from "../../utility/src/utility.ts"
-
-const model = getModel();
+import { model } from "../../utility/src/utility.ts";
 
 /**
  * Script to generate git commit messages in the conventional commit format.
@@ -43,7 +41,7 @@ export const message = async () => {
     const chunks = await tokenizers.chunk(diff, { chunkSize });
     if (chunks.length > 1) {
       console.log(
-        `Staged changes chunked into ${chunks.length} parts due to size`
+        `Staged changes chunked into ${chunks.length} parts due to size`,
       );
     }
 
@@ -82,14 +80,14 @@ export const message = async () => {
           system: ["system.assistant"],
           systemSafety: true,
           responseType: "text",
-        }
+        },
       );
 
       if (result.error) {
         // Log and skip chunk if LLM fails to generate a message
         console.error(
           "Error generating commit message for chunk:",
-          result.error
+          result.error,
         );
         continue;
       }
@@ -130,7 +128,7 @@ export const message = async () => {
           system: ["system.assistant"],
           systemSafety: true,
           responseType: "text",
-        }
+        },
       );
 
       if (!summaryResult.error) {
@@ -144,7 +142,7 @@ export const message = async () => {
     if (!commitMessage) {
       // Defensive: If LLM fails to generate any message, abort commit
       console.log(
-        "No commit message could be generated. Check your LLM configuration."
+        "No commit message could be generated. Check your LLM configuration.",
       );
       return;
     }

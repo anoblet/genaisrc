@@ -1,10 +1,7 @@
 import { comment } from "../../comment/src/comment.genai.mts";
 import { message } from "../../message/src/message.genai.mts";
 import { style } from "../../style/src/style.genai.mts";
-import { envBoolean, getModel } from "../../utility/src/utility.ts";
-
-// Retrieve the current AI model configuration for use in script registration and downstream tasks
-const model = getModel();
+import { envBoolean, model } from "../../utility/src/utility.ts";
 
 // Register script metadata for integration with the automation framework
 script({

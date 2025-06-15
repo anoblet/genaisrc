@@ -1,8 +1,10 @@
-import { envBoolean, getFiles, getModel, stageFiles } from "../../utility/src/utility.ts";
+import {
+  envBoolean,
+  getFiles,
+  model,
+  stageFiles,
+} from "../../utility/src/utility.ts";
 import { fileURLToPath } from "url";
-
-// Initialize the model used for prompt execution
-const model = getModel();
 
 // Determine the maximum number of tokens to use for style prompts, allowing override via environment variable
 const maxTokens = process.env.GENAISCRIPT_STYLE_TOKENS
@@ -27,10 +29,10 @@ script({
 
 /**
  * Processes a single file by applying the code style prompt and writing the result.
- * 
+ *
  * Loads the code style definition, runs the prompt engine with the file content and style,
  * and writes the result back to the style prompt file (potentially overwriting the template).
- * 
+ *
  * @param file The file object to process, expected to have a .content property
  */
 const processFile = async (file) => {
@@ -69,9 +71,11 @@ const processFile = async (file) => {
 
 /**
  * Main entry point for the style script.
- * 
+ *
  * Checks if style processing is enabled, finds all files to style, processes each sequentially,
  * and stages the style prompt file for commit.
+ *
+ * @returns {Promise<void>} Resolves when styling is complete or skipped
  */
 export const style = async () => {
   if (!envBoolean(process.env.GENAISCRIPT_STYLE_ENABLED)) {
