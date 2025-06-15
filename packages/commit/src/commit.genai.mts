@@ -1,7 +1,7 @@
 import { comment } from "../../comment/src/comment.genai.mts";
 import { message } from "../../message/src/message.genai.mts";
 import { style } from "../../style/src/style.genai.mts";
-import { getModel } from "../../utility/src/utility.ts";
+import { envBoolean, getModel } from "../../utility/src/utility.ts";
 
 // Retrieve the current AI model configuration for use in script registration and downstream tasks
 const model = getModel();
@@ -27,6 +27,15 @@ export const commit = async () => {
   await style(); // Learn code style (ensures future steps follow project conventions)
   await comment(); // Generate comments (documents code for maintainability)
   await message(); // Generate commit message and commit (finalizes the workflow)
+
+  // Output whether the commit should be pushed, based on environment configuration
+  if (envBoolean(process.env.GENAISCRIPT_COMMIT_PUSH)) {
+    console.log("Push has been enabled");
+    // If push is enabled, execute the git push command
+    await git.exec(["push"]);
+  } else {
+    console.log("Push has been disabled");
+  }
 };
 
 export default commit;
