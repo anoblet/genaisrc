@@ -27,11 +27,19 @@ export const commit = async () => {
 
   // Output whether the commit should be pushed, based on environment configuration
   if (envBoolean("GENAISCRIPT_COMMIT_PUSH")) {
-    console.log("Push has been enabled");
+    console.log("Pushing...");
     // If push is enabled, execute the git push command
     await git.exec(["push"]);
   } else {
     console.log("Push has been disabled");
+  }
+
+  // Conditionally trigger deployment based on environment variable
+  if (envBoolean("GENAISCRIPT_COMMIT_DEPLOY")) {
+    console.log("Deploying...");
+    await host.exec("npm run deploy");
+  } else {
+    console.log("Deploy has been disabled");
   }
 };
 
