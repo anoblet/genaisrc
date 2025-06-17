@@ -78,7 +78,7 @@ const processFile = async (file) => {
  * @returns {Promise<void>} Resolves when styling is complete or skipped
  */
 export const style = async () => {
-  if (!envBoolean(process.env.GENAISCRIPT_STYLE_ENABLED)) {
+  if (!envBoolean("GENAISCRIPT_STYLE_ENABLED")) {
     // Early exit if style processing is disabled via environment variable
     console.log("Style is disabled");
     return;

@@ -2,7 +2,7 @@ import { fileURLToPath } from "url";
 import { envArray, envBoolean, getFiles, getModel, stageFiles } from "../../utility/src/utility.ts";
 
 // Determine if comment generation is enabled via environment variable
-const enabled = envBoolean(process.env.GENAISCRIPT_COMMENT_ENABLED);
+const enabled = envBoolean("GENAISCRIPT_COMMENT_ENABLED");
 
 const model = getModel();
 
@@ -40,7 +40,7 @@ export const comment = async () => {
 
     // Retrieve files matching the configured extensions for commenting
     const files = await getFiles({
-      include: envArray(process.env.GENAISCRIPT_COMMENT_EXTENSIONS),
+      include: envArray("GENAISCRIPT_COMMENT_EXTENSIONS"),
     });
 
     if (files.length === 0) {

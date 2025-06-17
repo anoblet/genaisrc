@@ -51,7 +51,7 @@ export const getFiles = async ({
   exclude?;
   include?;
 }) => {
-  const stageAll = envBoolean(process.env.GENAISCRIPT_STAGE_ALL);
+  const stageAll = envBoolean("GENAISCRIPT_STAGE_ALL");
 
   // Collect candidate files from highest to lowest priority:
   // 1. Files specified in env.files
@@ -93,17 +93,26 @@ export const stageFiles = async ({ files } = { files: [] }) => {
  * Converts a comma-separated environment variable string to a normalized array.
  * - Trims whitespace and lowercases each item.
  * - Returns empty array if input is falsy or empty.
- * @param envVar Comma-separated string from environment variable
+ * @param key Environment variable key to read from process.env
  * @returns Array of normalized strings
  */
-export const envArray = (envVar) => {
+export const envArray = (key) => {
+  const envVar = process.env[key];
   // Defensive: handle undefined, null, or empty string input
   if (!envVar || envVar.length === 0) return [];
   // Normalize: split, trim, and lowercase each entry for consistent matching
   return envVar.split(",").map((item) => item.trim().toLowerCase());
 };
 
-export const envBoolean = (value) => {
+/**
+ * Converts an environment variable value to a boolean.
+ * - Returns true for "true" (case-insensitive)
+ * - Returns false for "false", undefined, null, empty string, or any other value
+ * @param key Environment variable key to read from process.env
+ * @returns Boolean value based on the environment variable
+ */
+export const envBoolean = (key) => {
+  const value = process.env[key];
   if (value === undefined || value === null || value.length === 0) {
     return false; // Default to false for undefined, null, or empty strings
   }

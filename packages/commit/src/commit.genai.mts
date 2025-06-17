@@ -26,7 +26,7 @@ export const commit = async () => {
   await message(); // Generate commit message and commit (finalizes the workflow)
 
   // Output whether the commit should be pushed, based on environment configuration
-  if (envBoolean(process.env.GENAISCRIPT_COMMIT_PUSH)) {
+  if (envBoolean("GENAISCRIPT_COMMIT_PUSH")) {
     console.log("Push has been enabled");
     // If push is enabled, execute the git push command
     await git.exec(["push"]);
