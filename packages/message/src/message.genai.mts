@@ -47,6 +47,14 @@ export const message = async () => {
       );
     }
 
+    if (chunks.length > maxChunks) {
+      // Prevents committing extremely large diffs that could overwhelm the LLM or make the commit message unhelpful
+      console.log(
+        `Diff is too large (${chunks.length} chunks). Please commit smaller changes.`,
+      );
+      return;
+    }
+
     // Generate a commit message for each chunk, then combine them
     let message = "";
     for (const chunk of chunks) {
@@ -101,6 +109,7 @@ export const message = async () => {
     // If we chunked the diff, generate a summary commit message from all chunks
     let commitMessage = message.trim();
     if (chunks.length > 1) {
+      // When multiple chunks exist, summarize all generated messages into a single, coherent commit message
       console.log("Generating summary commit message from all chunks...");
       const summaryResult = await runPrompt(
         (ctx) => {
