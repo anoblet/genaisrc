@@ -1,4 +1,6 @@
-import { model } from "../../utility/src/utility.ts";
+import { envArray, model } from "../../utility/src/utility.ts";
+
+const excludedPaths = envArray("GENAISCRIPT_MESSAGE_EXCLUDED_PATHS");
 
 /**
  * Script to generate git commit messages in the conventional commit format.
@@ -22,7 +24,7 @@ export const message = async () => {
   try {
     // Get the diff of staged changes, excluding package-lock.json for noise reduction
     const diff = await git.diff({
-      excludedPaths: ["package-lock.json"],
+      excludedPaths,
       staged: true,
       askStageOnEmpty: false, // Don't ask since we've already handled staging
     });
