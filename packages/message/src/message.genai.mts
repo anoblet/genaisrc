@@ -1,4 +1,4 @@
-import { envArray, model } from "../../utility/src/utility.ts";
+import { envArray, envNumber, model } from "../../utility/src/utility.ts";
 
 const excludedPaths = envArray("GENAISCRIPT_MESSAGE_EXCLUDED_PATHS");
 
@@ -36,10 +36,13 @@ export const message = async () => {
     }
 
     // Constants for chunking
-    const chunkSize = 10000;
-    const maxChunks = 4; // Safeguard against huge commits
+    // The diff may be too large to send as a single context to the LLM, so we chunk it
+    // `chunkSize` and `chunkMax` are configurable limits to protect the LLM and avoid out-of-context errors
+    const chunkSize = envNumber("GENAISCRIPT_MESSAGE_CHUNK_SIZE") || 1000; // Default chunk size if not set
+    const chunkMax = envNumber("GENAISCRIPT_MESSAGE_CHUNK_MAX") || 10; // Default max chunks if not set
 
     // Chunk the diff if it's large to avoid exceeding LLM context limits
+    // This divides the input diff string into an array of manageable pieces for the LLM to process
     const chunks = await tokenizers.chunk(diff, { chunkSize });
     if (chunks.length > 1) {
       console.log(
@@ -47,8 +50,9 @@ export const message = async () => {
       );
     }
 
-    if (chunks.length > maxChunks) {
+    if (chunks.length > chunkMax) {
       // Prevents committing extremely large diffs that could overwhelm the LLM or make the commit message unhelpful
+      // This is a safeguard to encourage smaller, more meaningful commits
       console.log(
         `Diff is too large (${chunks.length} chunks). Please commit smaller changes.`,
       );
@@ -56,9 +60,11 @@ export const message = async () => {
     }
 
     // Generate a commit message for each chunk, then combine them
+    // This loop handles potentially context-busting diffs in multiple LLM calls and collects all messages
     let message = "";
     for (const chunk of chunks) {
       // For each chunk, prompt the LLM to generate a conventional commit message
+      // Defensive prompt engineering prohibits markdown output and clarifies diff line conventions to mitigate hallucination/confusion
       const result = await runPrompt(
         (ctx) => {
           ctx.def("GIT_DIFF", chunk, {
@@ -110,6 +116,7 @@ export const message = async () => {
     let commitMessage = message.trim();
     if (chunks.length > 1) {
       // When multiple chunks exist, summarize all generated messages into a single, coherent commit message
+      // The summary call here aims to avoid the LLM generating repetitive or fragmented commit texts
       console.log("Generating summary commit message from all chunks...");
       const summaryResult = await runPrompt(
         (ctx) => {
@@ -159,6 +166,7 @@ export const message = async () => {
     }
 
     // Commit the changes with the generated message
+    // This is the final step after all message generation and checks
     console.log("Committing with message:");
     console.log(commitMessage);
     const commitResult = await git.exec(["commit", "-m", commitMessage]);

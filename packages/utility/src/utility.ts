@@ -126,6 +126,16 @@ export const envBoolean = (key) => {
   }
 };
 
+export const envNumber = (key) => {
+  const value = process.env[key];
+  if (value === undefined || value === null || value.length === 0) {
+    return 0; // Default to 0 for undefined, null, or empty strings
+  } else {
+    const number = Number(value);
+    return isNaN(number) ? 0 : number; // Return 0 if conversion fails
+  }
+};
+
 export const getModel = () => {
   // Retrieve the model identifier from the environment for downstream API/model selection
   return process.env.GENAISCRIPT_MODEL;
