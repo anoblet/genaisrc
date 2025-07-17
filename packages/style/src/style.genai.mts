@@ -18,8 +18,8 @@ const prompt = (await workspace.readText(promptPath)).content;
 
 // Allow override of the style prompt path via environment variable for flexibility in CI or local runs
 const stylePath =
-  process.env.GENAISCRIPT_STYLE_PROMPT_PATH ||
-  "../../../.github/prompts/style.prompt.md";
+  process.env.GENAISCRIPT_STYLE_INSTRUCTIONS_PATH ||
+  "../../../.github/instructions/style.instructions.md";
 
 // Register this script with a title for discoverability in the script system
 script({
