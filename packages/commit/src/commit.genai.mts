@@ -21,7 +21,7 @@ script({
  * @returns {Promise<void>} Resolves when the commit workflow is complete
  */
 export const commit = async () => {
-  if (envBoolean("GENAISCRIPT_STAGE_ALL")) {
+  if (envBoolean("GENAISCRIPT_COMMIT_STAGE")) {
     // If staging all is enabled via environment variable, stage all file changes; ensures all modifications are included in the commit
     console.log("Staging all changes...");
     await git.exec(["add", "."]);

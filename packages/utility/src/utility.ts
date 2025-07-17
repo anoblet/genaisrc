@@ -58,7 +58,9 @@ export const getFiles = async ({
   // 2. Currently staged files in git
   // 3. If stageAll is true, stage all files and use that list
   const files =
-    getArray(env.files) || getArray(await git.listFiles("staged")) || (stageAll ? stageFiles() : false);
+    getArray(env.files) ||
+    getArray(await git.listFiles("staged")) ||
+    (stageAll ? stageFiles() : false);
 
   // Always apply filterFiles, even if files is undefined (handled by filterFiles)
   const filteredFiles = filterFiles({ files, include, exclude });
@@ -139,6 +141,6 @@ export const envNumber = (key) => {
 export const getModel = () => {
   // Retrieve the model identifier from the environment for downstream API/model selection
   return process.env.GENAISCRIPT_MODEL;
-}
+};
 
 export const model = getModel();
