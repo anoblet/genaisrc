@@ -1,6 +1,13 @@
-import { envArray, envNumber, model } from "../../utility/src/utility.ts";
+import {
+  envArray,
+  envNumber,
+  envString,
+  model,
+} from "../../utility/src/utility.ts";
+import { minimatch } from "minimatch";
 
 const excludedPaths = envArray("GENAISCRIPT_MESSAGE_EXCLUDED_PATHS");
+const includePattern = envString("GENAISCRIPT_MESSAGE_INCLUDE");
 
 /**
  * Script to generate git commit messages in the conventional commit format.
@@ -22,12 +29,44 @@ export const message = async () => {
   });
 
   try {
-    // Get the diff of staged changes, excluding package-lock.json for noise reduction
-    const diff = await git.diff({
-      excludedPaths,
+    let diffOptions = {
       staged: true,
       askStageOnEmpty: false, // Don't ask since we've already handled staging
-    });
+    };
+
+    // Apply include/exclude logic based on environment variables
+    if (includePattern) {
+      // If include pattern is set, filter staged files first
+      const stagedFiles = await git.listFiles("staged");
+      if (stagedFiles && stagedFiles.length > 0) {
+        // Apply include pattern filtering
+        const filteredFiles = stagedFiles.filter((file) => {
+          // Check include pattern
+          const matchesInclude =
+            !includePattern || minimatch(file, includePattern);
+          // Check exclude pattern
+          const matchesExclude =
+            excludedPaths.length > 0 &&
+            excludedPaths.some((pattern) => minimatch(file, pattern));
+
+          return matchesInclude && !matchesExclude;
+        });
+
+        if (filteredFiles.length === 0) {
+          console.log("No files match the include pattern. Exiting.");
+          return;
+        }
+
+        // Use specific files for diff
+        diffOptions.paths = filteredFiles;
+      }
+    } else {
+      // If no include pattern, just use exclude paths as before
+      diffOptions.excludedPaths = excludedPaths;
+    }
+
+    // Get the diff of staged changes
+    const diff = await git.diff(diffOptions);
 
     // If no staged changes are found after our attempts, exit gracefully
     if (!diff) {

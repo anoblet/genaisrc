@@ -1,3 +1,5 @@
+import { minimatch } from "minimatch";
+
 /**
  * Filters a list of files based on provided include and exclude extension lists.
  * - If both include and exclude are empty, returns all files.
@@ -25,6 +27,42 @@ export const filterFiles = ({ files, include = [], exclude = [] }) => {
 };
 
 /**
+ * Filters a list of files based on glob patterns for include and exclude.
+ * - If includePattern is provided, only files matching it are considered
+ * - If includePattern is not set, all files are considered valid initially
+ * - excludePattern is then applied to filter out matching files
+ * - Handles both string filenames and file objects with a filename property
+ * @param files List of files (string or object with filename)
+ * @param includePattern Glob pattern for files to include (optional)
+ * @param excludePattern Glob pattern for files to exclude (optional)
+ * @returns Filtered array of files
+ */
+export const filterFilesByGlob = ({
+  files,
+  includePattern,
+  excludePattern,
+}) => {
+  if (!files || files.length === 0) return [];
+
+  return files.filter((file) => {
+    // Support both string filenames and file objects
+    const filename = typeof file === "string" ? file : file.filename;
+
+    // If include pattern is set, file must match it
+    if (includePattern && !minimatch(filename, includePattern)) {
+      return false;
+    }
+
+    // If exclude pattern is set and file matches it, exclude the file
+    if (excludePattern && minimatch(filename, excludePattern)) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
+/**
  * Returns the array if it is defined and non-empty, otherwise undefined.
  * Useful for chaining fallback logic.
  * @param array Input array
@@ -42,14 +80,20 @@ export const getArray = (array) => {
  * Applies include/exclude filtering to the resulting list.
  * @param exclude Array of file extensions to exclude (optional)
  * @param include Array of file extensions to include (optional)
+ * @param includePattern Glob pattern for files to include (optional, from GENAISCRIPT_MESSAGE_INCLUDE)
+ * @param excludePattern Glob pattern for files to exclude (optional, from GENAISCRIPT_MESSAGE_EXCLUDED_PATHS)
  * @returns Promise resolving to filtered file list
  */
 export const getFiles = async ({
   exclude,
   include,
+  includePattern,
+  excludePattern,
 }: {
   exclude?;
   include?;
+  includePattern?;
+  excludePattern?;
 }) => {
   const stageAll = envBoolean("GENAISCRIPT_STAGE_ALL");
 
@@ -62,8 +106,19 @@ export const getFiles = async ({
     getArray(await git.listFiles("staged")) ||
     (stageAll ? stageFiles() : false);
 
-  // Always apply filterFiles, even if files is undefined (handled by filterFiles)
-  const filteredFiles = filterFiles({ files, include, exclude });
+  let filteredFiles = files;
+
+  // First apply glob pattern filtering if provided
+  if (includePattern || excludePattern) {
+    filteredFiles = filterFilesByGlob({
+      files: filteredFiles,
+      includePattern,
+      excludePattern,
+    });
+  } else {
+    // If no glob patterns, apply traditional extension-based filtering
+    filteredFiles = filterFiles({ files: filteredFiles, include, exclude });
+  }
 
   return filteredFiles;
 };
@@ -104,6 +159,20 @@ export const envArray = (key) => {
   if (!envVar || envVar.length === 0) return [];
   // Normalize: split, trim, and lowercase each entry for consistent matching
   return envVar.split(",").map((item) => item.trim().toLowerCase());
+};
+
+/**
+ * Retrieves a string environment variable value.
+ * - Returns undefined if the environment variable is not set or empty.
+ * @param key Environment variable key to read from process.env
+ * @returns String value or undefined
+ */
+export const envString = (key) => {
+  const value = process.env[key];
+  if (value === undefined || value === null || value.trim().length === 0) {
+    return undefined;
+  }
+  return value.trim();
 };
 
 /**
