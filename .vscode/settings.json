@@ -1,6 +1,1 @@
-{
-  "chat.agent.maxRequests": 1000,
-  "chat.modeFilesLocations": {
-    "awesome-copilot/chatmodes": true
-  }
-}
+../../.vscode/settings.json
