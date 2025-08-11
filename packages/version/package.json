@@ -1,0 +1,21 @@
+{
+  "name": "@genaisrc/version",
+  "version": "1.0.0",
+  "description": "Automatic semantic versioning based on conventional commits",
+  "main": "src/version.genai.mts",
+  "scripts": {
+    "version": "genaiscript run src/version.genai.mts"
+  },
+  "keywords": [
+    "genaiscript",
+    "version",
+    "semantic-versioning",
+    "conventional-commits",
+    "automation"
+  ],
+  "author": "Andrew Noblet",
+  "license": "ISC",
+  "dependencies": {
+    "@genaisrc/utility": "workspace:*"
+  }
+}
