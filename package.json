@@ -26,5 +26,8 @@
   ],
   "lint-staged": {
     "*.{js, md, mjs, mts, ts}": "prettier --write"
+  },
+  "dependencies": {
+    "minimatch": "^10.0.3"
   }
 }
