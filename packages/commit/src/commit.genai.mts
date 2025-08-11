@@ -17,6 +17,7 @@ script({
  * 3. Produces a commit message and performs the commit.
  *
  * This function abstracts the multi-step commit process to enforce best practices and maintain code quality.
+ * Version management is handled separately by the wireit dependency chain.
  *
  * @returns {Promise<void>} Resolves when the commit workflow is complete
  */

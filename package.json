@@ -21,7 +21,8 @@
     "packages/comment",
     "packages/message",
     "packages/utility",
-    "packages/style"
+    "packages/style",
+    "packages/version"
   ],
   "lint-staged": {
     "*.{js, md, mjs, mts, ts}": "prettier --write"
