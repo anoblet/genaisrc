@@ -4,7 +4,7 @@ import {
   envString,
   model,
 } from "../../utility/src/utility.ts";
-import { minimatch } from "minimatch";
+import { minimatch } from "minimatch/dist/esm/index.js";
 
 const excludedPaths = envArray("GENAISCRIPT_MESSAGE_EXCLUDED_PATHS");
 const includePattern = envString("GENAISCRIPT_MESSAGE_INCLUDE");

@@ -1,4 +1,4 @@
-import { minimatch } from "minimatch";
+import { minimatch } from "minimatch/dist/esm/index.js";
 
 /**
  * Filters a list of files based on provided include and exclude extension lists.
