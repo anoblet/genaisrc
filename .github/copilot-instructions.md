@@ -48,3 +48,5 @@ Call `mcp_memory_read_graph` as your very first action to retrieve existing cont
 
 #file:./instructions/memory.instructions.md
 #file:./instructions/sequential-thinking.instructions.md
+
+- Be clean, thoughtful, and thorough
